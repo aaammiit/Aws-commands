@@ -1,0 +1,114 @@
+                                                   "How to Deploy Django Web on AWS EC2"
+
+1 .  First create ec2 instance with ubuntu machine and keypair required and then launch instance
+2 .  instance in running mode then go security group and edit inbound rules add http and all tcp and custom tcp on port 8000 and save 
+3 .  two way to connect with ec2 instance first EC2 instance connect and second is a external terminal through ssh client
+4 .  commands are same both side
+6 .  i am going with the second 
+7 .  go to location of keypair file download and open git bash here
+8 .  go to ssh client copy (chmod 400 "sg.pem") this line and paste in bash
+9 .  next copy (ssh -i "sg.pem" ubuntu@ec2-100-26-52-110.compute-1.amazonaws.com) this one and paste in bash
+10.  now your bash connect with ec2
+11.  now the commands execute line by line
+
+
+12.  sudo apt update 
+13.  sudo apt install python3-venv python3-dev libpq-dev nginx curl 
+14.  create a dir command use--  mkdir project
+15.  then --   cd project
+16.  create virtual environment 
+17.  for virtual run this command --   python3 -m venv env
+18.  activate virtual --   source env/bin/activate
+19.  install dependencies like 
+20.  pip install Django
+21.  pip install django gunicorn 
+22.  then clone your git repo --  git clone https://github.com/aaammiit/krima_portal4.git
+23.  cd your repo like --  cd krima_portal4
+24.  python manage.py makemigrations
+25.  python manage.py migrate
+26.  python manage.py collectstatic
+27.  python manage.py createsuperuser
+28.  sudo ufw allow 8000
+29.  python manage.py runserver 0.0.0.0:8000
+30.  gunicorn --bind 0.0.0.0:8000 myproject.wsgi (myproject is where is wsgi file located)
+31.  deactivate
+32.  create gunicorn socket file
+     The Gunicorn socket will be created at boot and will listen for connections.
+     When a connection occurs, systemd will automatically            
+     start the Gunicorn process to handle the connection.
+    
+    sudo nano /etc/systemd/system/gunicorn.socket
+
+   then open code editior ---
+                                                 [Unit]
+                                                      Description=gunicorn socket
+
+                                                 [Socket]
+                                                      ListenStream=/run/gunicorn.sock
+
+                                                 [Install]
+                                                      WantedBy=sockets.target
+
+      that command will paste and ctrl o press enter ctrl s ctrl x
+
+33.  create gunicorn service file
+     create and open a systemd service file for Gunicorn with sudo privileges in your text editor.
+     The service filename should match the socket filename with the exception of the extension
+
+    sudo nano /etc/systemd/system/gunicorn.service
+
+    then open code editior ---
+
+   for working dir go to your bash cd repo and run pwd
+
+                                                  [Unit]
+                                                      Description=gunicorn daemon
+                                                      Requires=gunicorn.socket
+                                                      After=network.target
+
+                                                  [Service]
+                                                      User=ubuntu
+                                                      Group=www-data
+                                                      WorkingDirectory=/home/ubuntu/project/krima_portal4 
+                                                      ExecStart=/home/sammy/project/env/bin/gunicorn \
+                                                      --access-logfile - \
+                                                      --workers 3 \
+                                                      --bind unix:/run/gunicorn.sock \
+                                                       Main.wsgi:application
+                                                
+                                                 [Install]
+                                                      WantedBy=multi-user.target
+
+34.  sudo systemctl start gunicorn.socket
+35.  sudo systemctl enable gunicorn.socket
+36.  sudo systemctl status gunicorn.socket
+37.  file /run/gunicorn.sock
+38.  sudo journalctl -u gunicorn.socket
+39.  sudo systemctl status gunicorn
+40.  curl --unix-socket /run/gunicorn.sock localhost
+  (run this command then open index.html in your bash in not open then you have made mistake check and go ahade)
+41.  sudo systemctl status gunicorn
+42.  sudo journalctl -u gunicorn
+43.  sudo systemctl daemon-reload
+44.  sudo systemctl restart gunicorn
+45.  sudo nano /etc/nginx/sites-available/myproject
+46.    paste this command                             server {
+                                                         listen 80;
+                                                         server_name server_domain_or_IP;
+
+                                                         location = /favicon.ico { access_log off; log_not_found off; }
+                                                         location / {
+                                                                include proxy_params;
+                                                                proxy_pass http://unix:/run/gunicorn.sock;
+                                                                    }
+                                                             }
+47.  sudo ln -s /etc/nginx/sites-available/myproject /etc/nginx/sites-enabled
+48.  sudo nginx -t
+49.  sudo systemctl restart nginx
+50.  sudo ufw delete allow 8000
+51.  sudo ufw allow 'Nginx Full'
+
+
+                                              Now your Project Live On AWS open your public ip in browser 
+
+                                                                                                                    Amit Kumar Dwivedi
