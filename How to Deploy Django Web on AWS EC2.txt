@@ -109,6 +109,39 @@
 51.  sudo ufw allow 'Nginx Full'
 
 
-                                              Now your Project Live On AWS open your public ip in browser 
+                                              Now your Project Live On AWS open your public ip in browser
 
-                                                                                                                    Amit Kumar Dwivedi
+** if your static file not show in your web
+sudo nginx -s reload
+sudo service nginx restart
+sudo systemctl reload nginx
+sudo systemctl restart nginx
+sudo nginx -t
+sudo systemctl restart gunicorn
+sudo tail -f /var/log/nginx/error.log
+sudo chown -R www-data:www-data /home/ubuntu/project/Krima_tornado/staticfiles/
+sudo nginx -t
+sudo chmod 644 /home/ubuntu/project/Krima_tornado/staticfiles/admin_temps/index.html
+sudo chmod o+x /home/ubuntu
+sudo chmod o+x /home/ubuntu/project
+sudo chmod o+x /home/ubuntu/project/Krima_tornado
+sudo service nginx restart
+
+** open dbsilte3 in aws cosole 
+first go to dir
+sqlite3 db.sqlite3
+.table
+
+** update code github to aws ec2 instance
+1. your update code commit on GitHub
+2. open aws console/ bash and connect ec2 instance
+3. go to your folder dir
+4. sudo apt install git 
+5. git pull
+6. sudo systemctl daemon-reload
+7. sudo systemctl restart gunicorn-socket
+8. sudo systemctl restart gunicorn-service
+
+
+
+  *** Amit Kumar Dwivedi ***
